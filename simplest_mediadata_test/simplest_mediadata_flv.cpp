@@ -101,6 +101,8 @@ int simplest_flv_parser(char *url){
 	fprintf(myout,"HeaderSize: 0x %X\n",reverse_bytes((byte *)&flv.DataOffset, sizeof(flv.DataOffset)));
 	fprintf(myout,"========================================\n");
 
+	//％c			//用来输出一个字符
+	// ％x		   //以十六进制数形式输出整数，或输出字符串的地址
 	//move the file pointer to the end of the header
 	fseek(ifh, reverse_bytes((byte *)&flv.DataOffset, sizeof(flv.DataOffset)), SEEK_SET);
 
@@ -137,8 +139,17 @@ int simplest_flv_parser(char *url){
 			strcat(audiotag_str,"| ");
 			char tagdata_first_byte;
 			tagdata_first_byte=fgetc(ifh);
+		    
+			//1. fgetc 从指定的流 stream 获取下一个字符
+		    //https://www.runoob.com/cprogramming/c-function-fgetc.html
+
+			//2. 音频Tag开始的第1个字节包含了音频数据的参数信息，从第2个字节开始为音频流数据
+
+			
 			int x=tagdata_first_byte&0xF0;
-			x=x>>4;
+
+			x=x>>4; //第1个字节的前4位的数值表示了音频编码类型
+
 			switch (x)
 			{
 			case 0:strcat(audiotag_str,"Linear PCM, platform endian");break;
@@ -160,6 +171,7 @@ int simplest_flv_parser(char *url){
 			strcat(audiotag_str,"| ");
 			x=tagdata_first_byte&0x0C;
 			x=x>>2;
+			//第1个字节的第5-6位的数值表示音频采样率
 			switch (x)
 			{
 			case 0:strcat(audiotag_str,"5.5-kHz");break;
@@ -170,20 +182,24 @@ int simplest_flv_parser(char *url){
 			}
 			strcat(audiotag_str,"| ");
 			x=tagdata_first_byte&0x02;
-			x=x>>1;
+
+			x=x>>1; //第1个字节的第7位表示音频采样精度
 			switch (x)
 			{
-			case 0:strcat(audiotag_str,"8Bit");break;
-			case 1:strcat(audiotag_str,"16Bit");break;
-			default:strcat(audiotag_str,"UNKNOWN");break;
+				case 0:strcat(audiotag_str,"8Bit");break;
+				case 1:strcat(audiotag_str,"16Bit");break;
+				default:strcat(audiotag_str,"UNKNOWN");break;
 			}
 			strcat(audiotag_str,"| ");
-			x=tagdata_first_byte&0x01;
+
+			x=tagdata_first_byte&0x01; //第1个字节的第8位表示音频类型。
+
+			
 			switch (x)
 			{
-			case 0:strcat(audiotag_str,"Mono");break;
-			case 1:strcat(audiotag_str,"Stereo");break;
-			default:strcat(audiotag_str,"UNKNOWN");break;
+				case 0:strcat(audiotag_str,"Mono");break;
+				case 1:strcat(audiotag_str,"Stereo");break;
+				default:strcat(audiotag_str,"UNKNOWN");break;
 			}
 			fprintf(myout,"%s",audiotag_str);
 

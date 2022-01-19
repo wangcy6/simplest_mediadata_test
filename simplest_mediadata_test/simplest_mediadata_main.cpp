@@ -207,6 +207,7 @@ int simplest_pcm16le_to_wave(const char *pcmpath,int channels,int sample_rate,co
 int main(int argc, char* argv[]){
 
 	//Test
+	/*
 	simplest_yuv420_split("lena_256x256_yuv420p.yuv",256,256,1);
 
 	simplest_yuv444_split("lena_256x256_yuv444p.yuv",256,256,1);
@@ -242,12 +243,15 @@ int main(int argc, char* argv[]){
 	simplest_pcm16le_to_wave("NocturneNo2inEflat_44.1k_s16le.pcm",2,44100,"output_nocturne.wav");
 
 	simplest_h264_parser("sintel.h264");
-	
-	simplest_flv_parser("cuc_ieschool.flv");
 
 	simplest_aac_parser("nocturne.aac");
 
 	simplest_udp_parser(8880);
+	**/
+	//https://blog.csdn.net/leixiaohua1020/article/details/50535082
+	simplest_flv_parser("cuc_ieschool.flv");
+
+
 
 	return 0;
 }
