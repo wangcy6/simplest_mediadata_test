@@ -133,7 +133,12 @@ int simplest_flv_parser(char *url){
 
 		//process tag by type
 		switch (tagheader.TagType) {
+		case TAG_TYPE_SCRIPT:
+		{
+			//通常该类型Tag会跟在File Header后面作为第一个Tag出现，而且只有一个
+			//Script Tag Data结构（控制帧）
 
+		}
 		case TAG_TYPE_AUDIO:{ 
 			char audiotag_str[100]={0};
 			strcat(audiotag_str,"| ");
@@ -152,33 +157,35 @@ int simplest_flv_parser(char *url){
 
 			switch (x)
 			{
-			case 0:strcat(audiotag_str,"Linear PCM, platform endian");break;
-			case 1:strcat(audiotag_str,"ADPCM");break;
-			case 2:strcat(audiotag_str,"MP3");break;
-			case 3:strcat(audiotag_str,"Linear PCM, little endian");break;
-			case 4:strcat(audiotag_str,"Nellymoser 16-kHz mono");break;
-			case 5:strcat(audiotag_str,"Nellymoser 8-kHz mono");break;
-			case 6:strcat(audiotag_str,"Nellymoser");break;
-			case 7:strcat(audiotag_str,"G.711 A-law logarithmic PCM");break;
-			case 8:strcat(audiotag_str,"G.711 mu-law logarithmic PCM");break;
-			case 9:strcat(audiotag_str,"reserved");break;
-			case 10:strcat(audiotag_str,"AAC");break;
-			case 11:strcat(audiotag_str,"Speex");break;
-			case 14:strcat(audiotag_str,"MP3 8-Khz");break;
-			case 15:strcat(audiotag_str,"Device-specific sound");break;
-			default:strcat(audiotag_str,"UNKNOWN");break;
+				case 0:strcat(audiotag_str,"Linear PCM, platform endian");break;
+				case 1:strcat(audiotag_str,"ADPCM");break;
+				case 2:strcat(audiotag_str,"MP3");break;
+				case 3:strcat(audiotag_str,"Linear PCM, little endian");break;
+				case 4:strcat(audiotag_str,"Nellymoser 16-kHz mono");break;
+				case 5:strcat(audiotag_str,"Nellymoser 8-kHz mono");break;
+				case 6:strcat(audiotag_str,"Nellymoser");break;
+				case 7:strcat(audiotag_str,"G.711 A-law logarithmic PCM");break;
+				case 8:strcat(audiotag_str,"G.711 mu-law logarithmic PCM");break;
+				case 9:strcat(audiotag_str,"reserved");break;
+				case 10:strcat(audiotag_str,"AAC");break;
+				case 11:strcat(audiotag_str,"Speex");break;
+				case 14:strcat(audiotag_str,"MP3 8-Khz");break;
+				case 15:strcat(audiotag_str,"Device-specific sound");break;
+				default:strcat(audiotag_str,"UNKNOWN");break;
 			}
 			strcat(audiotag_str,"| ");
 			x=tagdata_first_byte&0x0C;
 			x=x>>2;
+		
 			//第1个字节的第5-6位的数值表示音频采样率
+			//从上表可以发现，FLV封装格式并不支持48KHz的采样率
 			switch (x)
 			{
-			case 0:strcat(audiotag_str,"5.5-kHz");break;
-			case 1:strcat(audiotag_str,"1-kHz");break;
-			case 2:strcat(audiotag_str,"22-kHz");break;
-			case 3:strcat(audiotag_str,"44-kHz");break;
-			default:strcat(audiotag_str,"UNKNOWN");break;
+				case 0:strcat(audiotag_str,"5.5-kHz");break;
+				case 1:strcat(audiotag_str,"1-kHz");break;
+				case 2:strcat(audiotag_str,"22-kHz");break;
+				case 3:strcat(audiotag_str,"44-kHz");break;
+				default:strcat(audiotag_str,"UNKNOWN");break;
 			}
 			strcat(audiotag_str,"| ");
 			x=tagdata_first_byte&0x02;
@@ -228,27 +235,42 @@ int simplest_flv_parser(char *url){
 			tagdata_first_byte=fgetc(ifh);
 			int x=tagdata_first_byte&0xF0;
 			x=x>>4;
+			//第1个字节的前4位的数值表示帧类型
 			switch (x)
 			{
 			case 1:strcat(videotag_str,"key frame  ");break;
 			case 2:strcat(videotag_str,"inter frame");break;
+		     //https://en.wikipedia.org/wiki/Inter_frame
+		     //https://en.wikipedia.org/wiki/Reference_frame_(video)
 			case 3:strcat(videotag_str,"disposable inter frame");break;
 			case 4:strcat(videotag_str,"generated keyframe");break;
 			case 5:strcat(videotag_str,"video info/command frame");break;
 			default:strcat(videotag_str,"UNKNOWN");break;
+			//https://blog.video.ibm.com/streaming-video-tips/keyframes-interframe-video-compression/
+			//What is a keyframe ?
+			//The keyframe (i-frame) is the full frame of the image in a video
+
+		     // What is a p-frame ?
+			//, the p-frame follows another frame and only contain part of the image in a video
+
+			//B frames are not used when the encoding profile is set to baseline inside the encoder.
+			//当编码概要文件在编码器内设置为基线时，不使用B帧  
+
 			}
 			strcat(videotag_str,"| ");
 			x=tagdata_first_byte&0x0F;
+			//第1个字节的后4位的数值表示视频编码类型。如表6所示。
+
 			switch (x)
 			{
-			case 1:strcat(videotag_str,"JPEG (currently unused)");break;
-			case 2:strcat(videotag_str,"Sorenson H.263");break;
-			case 3:strcat(videotag_str,"Screen video");break;
-			case 4:strcat(videotag_str,"On2 VP6");break;
-			case 5:strcat(videotag_str,"On2 VP6 with alpha channel");break;
-			case 6:strcat(videotag_str,"Screen video version 2");break;
-			case 7:strcat(videotag_str,"AVC");break;
-			default:strcat(videotag_str,"UNKNOWN");break;
+				case 1:strcat(videotag_str,"JPEG (currently unused)");break;
+				case 2:strcat(videotag_str,"Sorenson H.263");break;
+				case 3:strcat(videotag_str,"Screen video");break;
+				case 4:strcat(videotag_str,"On2 VP6");break;
+				case 5:strcat(videotag_str,"On2 VP6 with alpha channel");break;
+				case 6:strcat(videotag_str,"Screen video version 2");break;
+				case 7:strcat(videotag_str,"AVC");break;
+				default:strcat(videotag_str,"UNKNOWN");break;
 			}
 			fprintf(myout,"%s",videotag_str);
 
